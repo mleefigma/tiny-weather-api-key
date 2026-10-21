@@ -5,30 +5,31 @@
   <title>Tiny Weather</title>
   <style>
     body { font: 18px system-ui; max-width: 420px; margin: 80px auto; padding: 24px; }
-    input, button { box-sizing: border-box; width: 100%; padding: 12px; margin-top: 12px; font: inherit; }
+    button { box-sizing: border-box; width: 100%; padding: 12px; margin-top: 12px; font: inherit; }
     button { cursor: pointer; }
     #result { min-height: 3em; }
   </style>
   <h1>Tiny Weather</h1>
   <p>Check the weather in San Francisco.</p>
   <form id="form">
-    <label for="key">OpenWeather API key</label>
-    <input id="key" type="password" autocomplete="off" required placeholder="Paste your API key">
     <button id="button">Get weather</button>
   </form>
-  <p id="result" role="status" aria-live="polite">Add a key to get started.</p>
-  <p><small>Your key is sent directly to OpenWeather and is not saved. This frontend demo does not hide the key from browser developer tools.</small></p>
+  <p id="result" role="status" aria-live="polite"></p>
+  <p><small>This demo requires VITE_OPENWEATHER_API_KEY in the sandbox environment. Frontend environment variables are visible in the browser.</small></p>
   <a href="https://home.openweathermap.org/api_keys" target="_blank" rel="noreferrer">Get an OpenWeather key</a>
-  <script>
+  <script type="module">
     const form = document.querySelector('#form');
-    const key = document.querySelector('#key');
+    const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY?.trim();
     const button = document.querySelector('#button');
     const result = document.querySelector('#result');
+    const missingKeyMessage = 'Missing VITE_OPENWEATHER_API_KEY. Set it in the sandbox environment and restart the dev server.';
+    result.textContent = apiKey ? 'Ready to get weather.' : missingKeyMessage;
+    button.disabled = !apiKey;
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      if (!key.value.trim()) {
-        result.textContent = 'Enter an API key first.';
+      if (!apiKey) {
+        result.textContent = missingKeyMessage;
         return;
       }
       button.disabled = true;
@@ -36,7 +37,7 @@
       try {
         const url = new URL('https://api.openweathermap.org/data/2.5/weather');
         url.search = new URLSearchParams({
-          lat: '37.7749', lon: '-122.4194', units: 'metric', appid: key.value.trim()
+          lat: '37.7749', lon: '-122.4194', units: 'metric', appid: apiKey
         });
         const response = await fetch(url);
         if (!response.ok) {
